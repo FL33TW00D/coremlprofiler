@@ -81,7 +81,7 @@ class CoreMLProfiler:
             raise ValueError(f"Error compiling model: {error}")
         output_path = Path(input_path).with_suffix(".mlmodelc")
         Path(compiled_path).rename(output_path)
-        return output_path
+        return str(output_path)
 
     def _create_compute_plan(self):
         """Create a compute plan for the model."""
