@@ -36,9 +36,9 @@ class DeviceUsage(dict):
 
 class CoreMLProfiler:
     def __init__(self, model_path: str):
-        self.model_path = self._validate_and_prepare_model(model_path)
+        self.model_url = self._validate_and_prepare_model(model_path)
         self.compute_plan = None
-        self.device_usage = DeviceUsage()
+        self.device_usage = None
 
     def _validate_and_prepare_model(self, model_path: str) -> NSURL:
         """Validate the model path and convert if necessary."""
@@ -47,7 +47,11 @@ class CoreMLProfiler:
 
         compiled_path = None
         if model_path.endswith('.mlpackage'):
-            compiled_path = self._convert_mlpackage_to_mlmodelc(model_path)
+            #check if .mlmodelc already exists
+            if os.path.exists(model_path.replace('.mlpackage', '.mlmodelc')):
+                compiled_path = model_path.replace('.mlpackage', '.mlmodelc')
+            else:
+                compiled_path = self._convert_mlpackage_to_mlmodelc(model_path)
         elif model_path.endswith('.mlmodelc'):
             compiled_path = model_path
         else:
@@ -68,7 +72,7 @@ class CoreMLProfiler:
         """Create a compute plan for the model."""
         config = MLModelConfiguration.alloc().init()
         MLComputePlan.loadContentsOfURL_configuration_completionHandler_(
-            NSURL.fileURLWithPath_(self.model_path),
+            self.model_url,
             config,
             self._handle_compute_plan
         )
@@ -80,7 +84,7 @@ class CoreMLProfiler:
             raise RuntimeError(f"Error loading compute plan: {error}")
         
         if compute_plan:
-            self._analyze_compute_plan(compute_plan)
+            self.compute_plan = compute_plan
         else:
             raise ValueError("No compute plan returned")
         
@@ -100,6 +104,7 @@ class CoreMLProfiler:
         
         operations = main_function.block().operations()
         
+        self.device_usage = DeviceUsage()
         for operation in operations:
             device_usage = self.compute_plan.computeDeviceUsageForMLProgramOperation_(operation)
             if device_usage:
@@ -110,7 +115,8 @@ class CoreMLProfiler:
 
     def device_usage_summary(self, total_width=50):
         """Create a bar chart representation of device counts similar to XCode."""
-
+        if not self.device_usage:
+            self._calculate_device_usage()
         total = sum(self.device_usage.values())
         title = "Compute Unit Mapping"
         bar = ""
