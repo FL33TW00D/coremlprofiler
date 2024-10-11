@@ -12,4 +12,3 @@ def test_integration_with_real_model():
     assert summary[ComputeDevice.CPU] > 0
     assert summary[ComputeDevice.ANE] > 0
     print(profiler.device_usage_summary_chart())
-
