@@ -6,6 +6,7 @@ from PyObjCTools import AppHelper
 import enum
 from colorama import Fore, Style
 
+
 class _ComputeDevice(enum.Enum):
     CPU = 0
     GPU = 1
@@ -17,7 +18,12 @@ class _ComputeDevice(enum.Enum):
 
     @classmethod
     def from_pyobjc(cls, device):
-        from CoreML import MLCPUComputeDevice, MLGPUComputeDevice, MLNeuralEngineComputeDevice
+        from CoreML import (
+            MLCPUComputeDevice,
+            MLGPUComputeDevice,
+            MLNeuralEngineComputeDevice,
+        )
+
         if isinstance(device, MLCPUComputeDevice):
             return cls.CPU
         elif isinstance(device, MLGPUComputeDevice):
@@ -27,12 +33,14 @@ class _ComputeDevice(enum.Enum):
         else:
             return cls.Unknown
 
+
 class DeviceUsage(dict):
     def __init__(self):
         super().__init__({device: 0 for device in _ComputeDevice})
 
     def __str__(self):
-        return ', '.join(f"{device}: {count}" for device, count in self.items())
+        return ", ".join(f"{device}: {count}" for device, count in self.items())
+
 
 class CoreMLProfiler:
     def __init__(self, model_path: str):
@@ -46,22 +54,24 @@ class CoreMLProfiler:
             raise FileNotFoundError(f"File {model_path} does not exist")
 
         compiled_path = None
-        if model_path.endswith('.mlpackage'):
-            #check if .mlmodelc already exists
-            if os.path.exists(model_path.replace('.mlpackage', '.mlmodelc')):
-                compiled_path = model_path.replace('.mlpackage', '.mlmodelc')
+        if model_path.endswith(".mlpackage"):
+            # check if .mlmodelc already exists
+            if os.path.exists(model_path.replace(".mlpackage", ".mlmodelc")):
+                compiled_path = model_path.replace(".mlpackage", ".mlmodelc")
             else:
                 compiled_path = self._convert_mlpackage_to_mlmodelc(model_path)
-        elif model_path.endswith('.mlmodelc'):
+        elif model_path.endswith(".mlmodelc"):
             compiled_path = model_path
         else:
             raise ValueError("Input file must be either .mlpackage or .mlmodelc")
-        
+
         return NSURL.fileURLWithPath_(compiled_path)
 
     def _convert_mlpackage_to_mlmodelc(self, input_path) -> Path:
         """Convert .mlpackage to .mlmodelc."""
-        compiled_path, error = MLModel.compileModelAtURL_error_(NSURL.fileURLWithPath_(input_path), None)
+        compiled_path, error = MLModel.compileModelAtURL_error_(
+            NSURL.fileURLWithPath_(input_path), None
+        )
         if error:
             raise ValueError(f"Error compiling model: {error}")
         output_path = Path(input_path).with_suffix(".mlmodelc")
@@ -72,9 +82,7 @@ class CoreMLProfiler:
         """Create a compute plan for the model."""
         config = MLModelConfiguration.alloc().init()
         MLComputePlan.loadContentsOfURL_configuration_completionHandler_(
-            self.model_url,
-            config,
-            self._handle_compute_plan
+            self.model_url, config, self._handle_compute_plan
         )
         AppHelper.runConsoleEventLoop(installInterrupt=True)
 
@@ -82,12 +90,12 @@ class CoreMLProfiler:
         """Handle the compute plan callback."""
         if error:
             raise RuntimeError(f"Error loading compute plan: {error}")
-        
+
         if compute_plan:
             self.compute_plan = compute_plan
         else:
             raise ValueError("No compute plan returned")
-        
+
         AppHelper.callAfter(AppHelper.stopEventLoop)
 
     def _calculate_device_usage(self) -> DeviceUsage:
@@ -97,18 +105,22 @@ class CoreMLProfiler:
         program = self.compute_plan.modelStructure().program()
         if not program:
             raise ValueError("Missing program")
-        
+
         main_function = program.functions().objectForKey_("main")
         if not main_function:
             raise ValueError("Missing main function")
-        
+
         operations = main_function.block().operations()
-        
+
         self.device_usage = DeviceUsage()
         for operation in operations:
-            device_usage = self.compute_plan.computeDeviceUsageForMLProgramOperation_(operation)
+            device_usage = self.compute_plan.computeDeviceUsageForMLProgramOperation_(
+                operation
+            )
             if device_usage:
-                device_type = _ComputeDevice.from_pyobjc(device_usage.preferredComputeDevice())
+                device_type = _ComputeDevice.from_pyobjc(
+                    device_usage.preferredComputeDevice()
+                )
                 self.device_usage[device_type] += 1
 
         return self.device_usage
@@ -125,12 +137,12 @@ class CoreMLProfiler:
             _ComputeDevice.CPU: Fore.BLUE,
             _ComputeDevice.GPU: Fore.GREEN,
             _ComputeDevice.ANE: Fore.MAGENTA,
-            _ComputeDevice.Unknown: Fore.YELLOW
+            _ComputeDevice.Unknown: Fore.YELLOW,
         }
-        
+
         for device, count in self.device_usage.items():
             width = int(count / total * total_width) if total > 0 else 0
-            bar += colors[device] + '█' * width
+            bar += colors[device] + "█" * width
             legend += f"{colors[device]}■{Style.RESET_ALL} {device}: {count}  "
 
         return f"\033[1m{title}\033[0m\n{bar}{Style.RESET_ALL}\n{legend}"
