@@ -3,3 +3,4 @@
 **/*.mlpackage
 **/*.mlmodelc
 poetry.lock
+dist/**

@@ -1,8 +1,25 @@
 [tool.poetry]
 name = "coremlprofiler"
-version = "0.1.0"
+version = "0.3.0"
 description = "Profile your CoreML model directly from Python."
 authors = ["FL33TW00D <chris@fleetwood.dev>", "pcuenca <pcuenca@huggingface.co"]
+license = "MIT"
+readme = "README.md"
+homepage = "https://github.com/FL33TW00D/coremlprofiler"
+repository = "https://github.com/FL33TW00D/coremlprofiler"
+keywords = ["coreml", "profiler", "machine learning", "performance"]
+classifiers = [
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
 
 [tool.poetry.dependencies]
 python = "^3.8"
