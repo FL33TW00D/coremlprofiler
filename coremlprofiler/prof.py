@@ -7,7 +7,7 @@ import enum
 from colorama import Fore, Style
 
 
-class _ComputeDevice(enum.Enum):
+class ComputeDevice(enum.Enum):
     CPU = 0
     GPU = 1
     ANE = 2
@@ -36,7 +36,13 @@ class _ComputeDevice(enum.Enum):
 
 class DeviceUsage(dict):
     def __init__(self):
-        super().__init__({device: 0 for device in _ComputeDevice})
+        super().__init__(
+            {
+                ComputeDevice.CPU: 0,
+                ComputeDevice.GPU: 0,
+                ComputeDevice.ANE: 0,
+            }
+        )
 
     def __str__(self):
         return ", ".join(f"{device}: {count}" for device, count in self.items())
@@ -55,7 +61,6 @@ class CoreMLProfiler:
 
         compiled_path = None
         if model_path.endswith(".mlpackage"):
-            # check if .mlmodelc already exists
             if os.path.exists(model_path.replace(".mlpackage", ".mlmodelc")):
                 compiled_path = model_path.replace(".mlpackage", ".mlmodelc")
             else:
@@ -118,14 +123,20 @@ class CoreMLProfiler:
                 operation
             )
             if device_usage:
-                device_type = _ComputeDevice.from_pyobjc(
+                device_type = ComputeDevice.from_pyobjc(
                     device_usage.preferredComputeDevice()
                 )
                 self.device_usage[device_type] += 1
 
         return self.device_usage
 
-    def device_usage_summary(self, total_width=50):
+    def device_usage_summary(self) -> DeviceUsage:
+        """Return a summary of device usage."""
+        if not self.device_usage:
+            self._calculate_device_usage()
+        return self.device_usage
+
+    def device_usage_summary_chart(self, total_width=50):
         """Create a bar chart representation of device counts similar to XCode."""
         if not self.device_usage:
             self._calculate_device_usage()
@@ -134,10 +145,10 @@ class CoreMLProfiler:
         bar = ""
         legend = f"All: {total}  "
         colors = {
-            _ComputeDevice.CPU: Fore.BLUE,
-            _ComputeDevice.GPU: Fore.GREEN,
-            _ComputeDevice.ANE: Fore.MAGENTA,
-            _ComputeDevice.Unknown: Fore.YELLOW,
+            ComputeDevice.CPU: Fore.BLUE,
+            ComputeDevice.GPU: Fore.GREEN,
+            ComputeDevice.ANE: Fore.MAGENTA,
+            ComputeDevice.Unknown: Fore.YELLOW,
         }
 
         for device, count in self.device_usage.items():

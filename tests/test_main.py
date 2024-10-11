@@ -1,6 +1,4 @@
-import pytest
-from pathlib import Path
-from coremlprofiler import CoreMLProfiler
+from coremlprofiler import CoreMLProfiler, ComputeDevice
 from huggingface_hub import snapshot_download
 
 
@@ -9,4 +7,9 @@ def test_integration_with_real_model():
     model_path = repo_path + "/sentence_transformer_all-MiniLM-L6-v2.mlpackage"
 
     profiler = CoreMLProfiler(model_path)
-    print(profiler.device_usage_summary())
+
+    summary = profiler.device_usage_summary()
+    assert summary[ComputeDevice.CPU] > 0
+    assert summary[ComputeDevice.ANE] > 0
+    print(profiler.device_usage_summary_chart())
+
