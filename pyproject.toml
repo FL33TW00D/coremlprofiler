@@ -2,7 +2,7 @@
 name = "coremlprofiler"
 version = "0.3.0"
 description = "Profile your CoreML model directly from Python."
-authors = ["FL33TW00D <chris@fleetwood.dev>", "pcuenca <pcuenca@huggingface.co"]
+authors = ["FL33TW00D <chris@fleetwood.dev>", "pcuenca <pedro@huggingface.co"]
 license = "MIT"
 readme = "README.md"
 homepage = "https://github.com/FL33TW00D/coremlprofiler"
@@ -20,7 +20,6 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 
-
 [tool.poetry.dependencies]
 python = "^3.8"
 pyobjc-core = "^10.3"
@@ -31,6 +30,9 @@ colorama = "^0.4"
 [tool.poetry.dev-dependencies]
 pytest = "^8"
 huggingface-hub = "^0.25"
+
+[tool.poetry.scripts]
+coremlprofile = "coremlprofiler.cli:main"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
