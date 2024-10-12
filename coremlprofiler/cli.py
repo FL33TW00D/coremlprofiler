@@ -7,6 +7,7 @@ def main():
     parser = ArgumentParser("coremlprofile", usage="coremlprofile <model_id>")
     parser.add_argument("file", help="Local path to mlpackage or mlmodelc, or path relative to the Hugging Face repo id specified in --hf_repo")
     parser.add_argument("--hf_repo", help="Hugging Face repository ID to download the mlpackage from", default=None)
+    parser.add_argument("--detail", help="Report per-op device compatibility", action="store_true")
 
     args = parser.parse_args()
     if args.hf_repo:
@@ -26,3 +27,6 @@ def main():
 
     # Print your device usage
     print(profiler.device_usage_summary_chart())
+
+    if args.detail:
+        print(profiler.operator_compatibility_report())
