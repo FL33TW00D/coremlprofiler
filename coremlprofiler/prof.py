@@ -118,6 +118,7 @@ class CoreMLProfiler:
         operations = main_function.block().operations()
 
         self.device_usage = DeviceUsage()
+        self.operator_map = []
         for operation in operations:
             device_usage = self.compute_plan.computeDeviceUsageForMLProgramOperation_(
                 operation
@@ -125,6 +126,10 @@ class CoreMLProfiler:
             if device_usage:
                 device_type = ComputeDevice.from_pyobjc(
                     device_usage.preferredComputeDevice()
+                )
+                supported_types = [ComputeDevice.from_pyobjc(d) for d in device_usage.supportedComputeDevices()]
+                self.operator_map.append(
+                    {operation.operatorName(): [d in supported_types for d in [ComputeDevice.CPU, ComputeDevice.GPU, ComputeDevice.ANE]]},
                 )
                 self.device_usage[device_type] += 1
 
@@ -135,6 +140,15 @@ class CoreMLProfiler:
         if not self.device_usage:
             self._calculate_device_usage()
         return self.device_usage
+
+    def operator_compatibility_report(self):
+        lines = []
+        for op in self.operator_map:
+            op_name, op_compatibility = next(iter(op.items()))
+            op_compatibility = ["✅" if c else "❌" for c in op_compatibility]
+            op_compatibility = "\t".join(op_compatibility)
+            lines.append(f"{op_name:40}\t{op_compatibility}")
+        return "\n".join(lines)
 
     def device_usage_summary_chart(self, total_width=50):
         """Create a bar chart representation of device counts similar to XCode."""
