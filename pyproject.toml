@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "coremlprofiler"
-version = "0.3.0"
+version = "0.4.0"
 description = "Profile your CoreML model directly from Python."
 authors = ["FL33TW00D <chris@fleetwood.dev>", "pcuenca <pedro@huggingface.co"]
 license = "MIT"
