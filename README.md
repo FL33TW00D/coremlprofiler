@@ -18,9 +18,12 @@ profiler = CoreMLProfiler(model_path)
 
 # Print your device usage
 print(profiler.device_usage_summary_chart())
-# Enjoy your nice plot!
+# Print the operator compatibility report
+print(profiler.operator_compatibility_report())
 ```
 ![Python Profiling](https://github.com/user-attachments/assets/c9c7eb77-6a21-4ae7-a3a5-4f80ce8a1d8f)
+
+For more detailed reasons about why an operation could not be run on a compute unit, try out [decoreml](https://github.com/FL33TW00D/deCoreML)
 
 ## CLI
 
